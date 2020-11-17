@@ -15,7 +15,7 @@
 name: MyProject
 
 # Name of output directory. Checkpoints and logs will be saved at `pwd`/output_dir
-output_dir: out
+output_dir: Result
 
 # Device to be used
 device:
@@ -31,22 +31,22 @@ dataloader:
   # Number of categories in the specified dataset (choices: 1000, 10)
   num_classes: 1000
   # Path to dataset directory
-  path: /localhome/fair/Dataset/imagenet
+  path: ~/Project/Datasets/ImageNet/
   # Size of mini-batch
-  batch_size: 64
+  batch_size: 256
   # Number of data loading workers
-  workers: 32
+  workers: 8
   # Seeds random generators in a deterministic way (i.e., set all the seeds 0).
   # Please keep it true when resuming the experiment from a checkpoint
   deterministic: true
   # Load the model without DataParallel wrapping it
   serialized: false
   # Portion of training dataset to set aside for validation (range: [0, 1))
-  val_split: 0.05
+  val_split: 0.
 
 resume:
   # Path to a checkpoint to be loaded. Leave blank to skip
-  path:
+  path: /home/lagoon/Project/LSQ/Result/MyProject_20201116-013601/MyProject_checkpoint.pth.tar
   # Resume model parameters only
   lean: false
 
@@ -76,7 +76,7 @@ quan:
     # Quantizer type (choices: lsq)
     mode: lsq
     # Bit width of quantized activation
-    bit: 3
+    bit: 4
     # Each output channel uses its own scaling factor
     per_channel: false
     # Whether to use symmetric quantization
@@ -87,25 +87,26 @@ quan:
     # Quantizer type (choices: lsq)
     mode: lsq
     # Bit width of quantized weight
-    bit: 3
+    bit: 4
     # Each output channel uses its own scaling factor
-    per_channel: true
+    per_channel: false
     # Whether to use symmetric quantization
-    symmetric: false
+    symmetric: true
     # Whether to quantize all the numbers to non-negative
     all_positive: false
   excepts:
     # Specify quantized bit width for some layers, like this:
     conv1:
       act:
+        bit: 8
         all_positive: false
       weight:
-        bit:
+        bit: 8
     fc:
       act:
-        bit:
+        bit: 8
       weight:
-        bit:
+        bit: 8
 
 #============================ Training / Evaluation ============================
 
@@ -113,7 +114,7 @@ quan:
 # If this field is true, all the bellowing options will be ignored
 eval: false
 
-epochs: 90
+epochs: 100
 
 optimizer:
   learning_rate: 0.01
@@ -128,7 +129,7 @@ lr_scheduler:
   # Uncomment one of bellowing options to activate a learning rate scheduling
 
   # Fixed learning rate
-  mode: fixed
+  # mode: fixed
 
   # Step decay
   # mode: step
@@ -136,9 +137,9 @@ lr_scheduler:
   # gamma: 0.1
 
   # Multi-step decay
-  # mode: multi_step
-  # milestones: [30, ]
-  # gamma: 0.1
+  mode: multi_step
+  milestones: [30, 60, 90]
+  gamma: 0.1
 
   # Exponential decay
   # mode: exp

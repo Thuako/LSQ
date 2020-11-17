@@ -10,6 +10,8 @@ import util
 from model import create_model
 
 
+
+
 def main():
     script_dir = Path.cwd()
     args = util.get_config(default_file=script_dir / 'config.yaml')
@@ -17,15 +19,15 @@ def main():
     output_dir = script_dir / args.output_dir
     output_dir.mkdir(exist_ok=True)
 
-    log_dir = util.init_logger(args.name, output_dir, script_dir / 'logging.conf')
+    log_dir = util.init_logger(args.name, output_dir, 'logging.conf')
     logger = logging.getLogger()
 
     with open(log_dir / "args.yaml", "w") as yaml_file:  # dump experiment config
         yaml.safe_dump(args, yaml_file)
 
     pymonitor = util.ProgressMonitor(logger)
-    tbmonitor = util.TensorBoardMonitor(logger, log_dir)
-    monitors = [pymonitor, tbmonitor]
+    # tbmonitor = util.TensorBoardMonitor(logger, log_dir)
+    monitors = [pymonitor] #, tbmonitor]
 
     if args.device.type == 'cpu' or not t.cuda.is_available() or args.device.gpu == []:
         args.device.gpu = []
@@ -55,7 +57,7 @@ def main():
 
     modules_to_replace = quan.find_modules_to_quantize(model, args.quan)
     model = quan.replace_module_by_names(model, modules_to_replace)
-    tbmonitor.writer.add_graph(model, input_to_model=train_loader.dataset[0][0].unsqueeze(0))
+    # tbmonitor.writer.add_graph(model, input_to_model=train_loader.dataset[0][0].unsqueeze(0))
     logger.info('Inserted quantizers into the original model')
 
     if args.device.gpu and not args.dataloader.serialized:
@@ -99,9 +101,9 @@ def main():
                                                    lr_scheduler, epoch, monitors, args)
             v_top1, v_top5, v_loss = process.validate(val_loader, model, criterion, epoch, monitors, args)
 
-            tbmonitor.writer.add_scalars('Train_vs_Validation/Loss', {'train': t_loss, 'val': v_loss}, epoch)
-            tbmonitor.writer.add_scalars('Train_vs_Validation/Top1', {'train': t_top1, 'val': v_top1}, epoch)
-            tbmonitor.writer.add_scalars('Train_vs_Validation/Top5', {'train': t_top5, 'val': v_top5}, epoch)
+            # tbmonitor.writer.add_scalars('Train_vs_Validation/Loss', {'train': t_loss, 'val': v_loss}, epoch)
+            # tbmonitor.writer.add_scalars('Train_vs_Validation/Top1', {'train': t_top1, 'val': v_top1}, epoch)
+            # tbmonitor.writer.add_scalars('Train_vs_Validation/Top5', {'train': t_top5, 'val': v_top5}, epoch)
 
             perf_scoreboard.update(v_top1, v_top5, epoch)
             is_best = perf_scoreboard.is_best(epoch)
@@ -110,7 +112,7 @@ def main():
         logger.info('>>>>>>>> Epoch -1 (final model evaluation)')
         process.validate(test_loader, model, criterion, -1, monitors, args)
 
-    tbmonitor.writer.close()  # close the TensorBoard
+    # tbmonitor.writer.close()  # close the TensorBoard
     logger.info('Program completed successfully ... exiting ...')
     logger.info('If you have any questions or suggestions, please visit: github.com/zhutmost/lsq-net')
 

@@ -1,6 +1,6 @@
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 
-__all__ = ['ProgressMonitor', 'TensorBoardMonitor', 'AverageMeter']
+__all__ = ['ProgressMonitor',  'AverageMeter'] # 'TensorBoardMonitor',
 
 
 class AverageMeter:
@@ -59,7 +59,7 @@ class ProgressMonitor(Monitor):
             msg += '   '
         self.logger.info(msg)
 
-
+'''
 class TensorBoardMonitor(Monitor):
     def __init__(self, logger, log_dir):
         super().__init__()
@@ -71,3 +71,4 @@ class TensorBoardMonitor(Monitor):
         for k, v in meter_dict.items():
             val = v.val if isinstance(v, AverageMeter) else v
             self.writer.add_scalar(prefix + '/' + k, val, current_step)
+'''

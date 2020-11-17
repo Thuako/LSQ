@@ -1,0 +1,63 @@
+arch: resnet18
+dataloader:
+  batch_size: 256
+  dataset: imagenet
+  deterministic: true
+  num_classes: 1000
+  path: ~/Project/Datasets/ImageNet/
+  serialized: false
+  val_split: 0.0
+  workers: 8
+device:
+  gpu:
+  - 0
+  - 1
+  type: cuda
+epochs: 120
+eval: false
+log:
+  num_best_scores: 3
+  print_freq: 20
+lr_scheduler:
+  gamma: 0.1
+  milestones:
+  - 30
+  - 60
+  - 90
+  mode: multi_step
+  update_per_batch: true
+name: MyProject
+optimizer:
+  learning_rate: 0.01
+  momentum: 0.9
+  weight_decay: 0.0001
+output_dir: Result
+pre_trained: true
+quan:
+  act:
+    all_positive: true
+    bit: 4
+    mode: lsq
+    per_channel: false
+    symmetric: false
+  excepts:
+    conv1:
+      act:
+        all_positive: false
+        bit: 8
+      weight:
+        bit: 8
+    fc:
+      act:
+        bit: 8
+      weight:
+        bit: 8
+  weight:
+    all_positive: false
+    bit: 4
+    mode: lsq
+    per_channel: false
+    symmetric: true
+resume:
+  lean: false
+  path: checkpoint
