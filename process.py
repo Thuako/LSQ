@@ -5,6 +5,7 @@ import time
 
 import torch as t
 
+from quan.func import *
 from util import AverageMeter
 
 __all__ = ['train', 'validate', 'PerformanceScoreboard']
@@ -142,3 +143,24 @@ class PerformanceScoreboard:
 
     def is_best(self, epoch):
         return self.board[0]['epoch'] == epoch
+
+
+
+
+def get_initialization(test_loader, model, criterion, epoch, monitors, args):    
+    model.to(args.device.type)
+    act_init = dict()
+    def get_activation(name):
+        def hook(self, input, output):
+            act_init[name] = input[0].detach()
+        return hook
+
+    for name, module in model.named_modules():
+        if type(module) in QuanModuleMapping.keys():
+            module.register_forward_hook(get_activation(name))
+    
+    logger.info('>>>>>>>> Epoch -2 (full precision pre-trained model evaluation)')
+    validate(test_loader, model, criterion, -2, monitors, args)
+
+    return act_init
+    

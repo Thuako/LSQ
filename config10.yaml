@@ -1,0 +1,233 @@
+#===============================================================================
+#                      Default Configuration for LSQ-Net
+#===============================================================================
+# Please do NOT modify this file directly. If you want to modify configurations,
+# please:
+# 1. Create a new YAML file and copy some bellowing options to it.
+# 2. Modify these options in your YAML file.
+# 3. run main.py with your configuration file in the command line, like this:
+#       $ python main.py path/to/your/config/file
+# The options modified in your configuration file will overwrite those in this
+# file.
+#============================ Environment ======================================
+
+# Experiment name
+name: resnet20_v8_dynamic_4bit_2bit_multi_step_from_4bit
+
+# Name of output directory. Checkpoints and logs will be saved at `pwd`/output_dir
+output_dir: Result_V8
+save_all: False
+
+# Device to be used
+device:
+  # Use CPU or GPU (choices: cpu, cuda)
+  type: cuda
+  # GPU device IDs to be used. Only valid when device.type is 'cuda'
+  gpu: [0]
+
+# Dataset loader
+dataloader:
+  # Dataset to train/validate (choices: imagenet, cifar10)
+  dataset: cifar10
+  # Number of categories in the specified dataset (choices: 1000, 10)
+  num_classes: 10
+  # Path to dataset directory
+  path: /home/lagoon/Project/Datasets/cifar10
+  # Size of mini-batch
+  batch_size: 256
+  # Number of data loading workers
+  workers: 8
+  # Seeds random generators in a deterministic way (i.e., set all the seeds 0).
+  # Please keep it true when resuming the experiment from a checkpoint
+  deterministic: true
+  # Load the model without DataParallel wrapping it
+  serialized: false
+  # Portion of training dataset to set aside for validation (range: [0, 1))
+  val_split: 0.
+
+resume:
+  # Path to a checkpoint to be loaded. Leave blank to skip
+  path: 
+  # Resume model parameters only
+  lean: false
+
+log:
+  # Number of best scores to track and report
+  num_best_scores: 3
+  # Print frequency
+  print_freq: 20
+
+#============================ Model ============================================
+
+# Supported model architecture
+# choices:
+#   ImageNet:
+#     resnet18, resnet34, resnet50, resnet101, resnet152
+#   CIFAR10:
+#     resnet20, resnet32, resnet44, resnet56, resnet110, resnet1202
+arch: resnet20
+
+# Use pre-trained model
+pre_trained: True
+
+#============================ Quantization =====================================
+
+quan:
+  act: # (default for all layers)
+    # Quantizer type (choices: lsq)
+    mode: lsq
+    # Bit width of quantized activation
+    bit: 4
+    # Each output channel uses its own scaling factor
+    per_channel: true
+    # Whether to use symmetric quantization
+    symmetric: false
+    # Quantize all the numbers to non-negative
+    all_positive: True
+
+  weight: # (default for all layers)
+    # Quantizer type (choices: lsq)
+    mode: lsq
+    # Bit width of quantized weight
+    bit: 4
+    # Each output channel uses its own scaling factor
+    per_channel: True
+    # Whether to use symmetric quantization
+    symmetric: true
+    # Whether to quantize all the numbers to non-negative
+    all_positive: false
+
+  excepts:
+    # Specify quantized bit width for some layers, like this:
+    conv1:
+      act:
+        bit: 8
+        all_positive: false
+      weight:
+        bit: 8
+
+    fc:
+      act:
+        bit: 8
+      weight:
+        bit: 8
+
+  progress:  # progressive quantization
+    mode: true
+    path: /home/lagoon/Project/LSQ/V8_best/resnet20_v8_4bit_progress_6bit_multi_step_20201207-174623/resnet20_v8_4bit_progress_6bit_multi_step_best.pth.tar
+    init_restart: false
+    act: # (default for all layers)
+      # Bit width of quantized activation
+      bit: 4
+      # Whether to use symmetric quantization
+      symmetric: false
+      # Quantize all the numbers to non-negative
+      all_positive: true
+
+    weight: # (default for all layers)
+      # Bit width of quantized weight
+      bit: 4
+      # Whether to use symmetric quantization
+      symmetric: true
+      # Whether to quantize all the numbers to non-negative
+      all_positive: false
+
+    excepts:
+      # dynamic bit width by layer
+      conv1:
+        act:
+          all_positive: false
+          bit: 8
+        weight:
+          bit: 8
+
+      linear:
+        act:
+          bit: 8
+        weight: 
+          bit: 8
+      
+      layer3.0.conv1:
+        act: 
+          bit: 2
+        weight: 
+          bit: 2
+
+      layer3.0.conv2:
+        act: 
+          bit: 2
+        weight: 
+          bit: 2
+
+      layer3.1.conv1:
+        act: 
+          bit: 2
+        weight: 
+          bit: 2
+
+      layer3.1.conv2:
+        act: 
+          bit: 2
+        weight: 
+          bit: 2   
+
+      layer3.2.conv1:
+        act: 
+          bit: 2
+        weight: 
+          bit: 2
+
+      layer3.2.conv2:
+        act: 
+          bit: 2
+        weight: 
+          bit: 2             
+#============================ Training / Evaluation ============================
+
+# Evaluate the model without training
+# If this field is true, all the bellowing options will be ignored
+eval: false
+
+epochs: 200
+
+
+optimizer:  
+  learning_rate: 0.01
+  momentum: 0.9
+  weight_decay: 0.000025
+
+# Learning rate scheduler
+lr_scheduler:
+  # Update learning rate per batch or epoch
+  update_per_batch: true
+
+  # Uncomment one of bellowing options to activate a learning rate scheduling
+
+  # Fixed learning rate
+  # mode: fixed
+
+  # Step decay
+  # mode: step
+  # step_size: 30
+  # gamma: 0.1
+
+  # Multi-step decay
+  mode: multi_step
+  milestones: [50, 100, 150]
+  gamma: 0.1
+
+  # Exponential decay
+  # mode: exp
+  # gamma: 0.95
+
+  # Cosine annealing
+  # mode: cos
+  # lr_min: 0
+  # cycle: 1
+
+  # Cosine annealing with warm restarts
+  # mode: cos_warm_restarts
+  # lr_min: 0.000001
+  # cycle: 10
+  # cycle_scale: 1
+  # amp_scale: 1

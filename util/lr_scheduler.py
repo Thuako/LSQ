@@ -125,6 +125,7 @@ class CosineLr(LrScheduler):
         self.cycle = cycle
 
     def step(self, epoch, batch):
+        # 현재 epoch당 퍼센트를 더 자세하게 batch까지 따져줘서 batch마다 다르게 lr 주겠다.
         if self.update_per_batch:
             epoch = epoch + batch * self.batch_size / self.num_samples
         if epoch > self.cycle:

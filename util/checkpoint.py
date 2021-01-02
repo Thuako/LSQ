@@ -6,7 +6,7 @@ import torch as t
 logger = logging.getLogger()
 
 
-def save_checkpoint(epoch, arch, model, extras=None, is_best=None, name=None, output_dir='.'):
+def save_checkpoint(epoch, arch, model, extras=None, is_best=None, name=None, output_dir='.', serialized=False):
     """Save a pyTorch training checkpoint
     Args:
         epoch: current epoch number
@@ -31,12 +31,21 @@ def save_checkpoint(epoch, arch, model, extras=None, is_best=None, name=None, ou
     filename_best = 'best.pth.tar' if name is None else name + '_best.pth.tar'
     filepath_best = os.path.join(output_dir, filename_best)
 
-    checkpoint = {
-        'epoch': epoch,
-        'state_dict': model.state_dict(),
-        'arch': arch,
-        'extras': extras,
-    }
+    # dataparallelized model cannot change parameter after
+    if serialized is True:
+        checkpoint = {
+            'epoch': epoch,
+            'state_dict': model.state_dict(),
+            'arch': arch,
+            'extras': extras,
+        }
+    else:
+        checkpoint = {
+            'epoch': epoch,
+            'state_dict': model.module.state_dict(),
+            'arch': arch,
+            'extras': extras,
+        }
 
     msg = 'Saving checkpoint to:\n'
     msg += '             Current: %s\n' % filepath
@@ -44,7 +53,13 @@ def save_checkpoint(epoch, arch, model, extras=None, is_best=None, name=None, ou
     if is_best:
         msg += '                Best: %s\n' % filepath_best
         t.save(checkpoint, filepath_best)
+        # model.to('cpu')
+        # t.save(model, filepath_best)
+        # model.to('cuda')
     logger.info(msg)
+
+    logname = '_loggs.log' if name is None else name + '_loggs.log'
+    # logger.FileHandler(logname)
 
 
 def load_checkpoint(model, chkp_file, model_device=None, strict=False, lean=False):

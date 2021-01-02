@@ -35,7 +35,7 @@ def load_data(cfg):
     if cfg.dataset == 'imagenet':
         train_transform = tv.transforms.Compose([
             tv.transforms.RandomResizedCrop(224),
-            tv.transforms.RandomHorizontalFlip(),
+            tv.transforms.RandomHorizontalFlip(0.5),
             tv.transforms.ToTensor(),
             tv_normalize
         ])

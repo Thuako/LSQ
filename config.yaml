@@ -12,26 +12,27 @@
 #============================ Environment ======================================
 
 # Experiment name
-name: MyProject
+name: resnet20_test
 
 # Name of output directory. Checkpoints and logs will be saved at `pwd`/output_dir
 output_dir: Result
+save_all: False
 
 # Device to be used
 device:
   # Use CPU or GPU (choices: cpu, cuda)
-  type: cuda
+  type: cpu
   # GPU device IDs to be used. Only valid when device.type is 'cuda'
-  gpu: [0, 1]
+  gpu:
 
 # Dataset loader
 dataloader:
   # Dataset to train/validate (choices: imagenet, cifar10)
-  dataset: imagenet
+  dataset: cifar10
   # Number of categories in the specified dataset (choices: 1000, 10)
-  num_classes: 1000
+  num_classes: 10
   # Path to dataset directory
-  path: ~/Project/Datasets/ImageNet/
+  path: /home/lagoon/Project/Datasets/cifar10
   # Size of mini-batch
   batch_size: 256
   # Number of data loading workers
@@ -46,9 +47,9 @@ dataloader:
 
 resume:
   # Path to a checkpoint to be loaded. Leave blank to skip
-  path: /home/lagoon/Project/LSQ/Result/MyProject_20201116-013601/MyProject_checkpoint.pth.tar
+  path: 
   # Resume model parameters only
-  lean: false
+  lean: True
 
 log:
   # Number of best scores to track and report
@@ -64,10 +65,10 @@ log:
 #     resnet18, resnet34, resnet50, resnet101, resnet152
 #   CIFAR10:
 #     resnet20, resnet32, resnet44, resnet56, resnet110, resnet1202
-arch: resnet18
+arch: resnet20
 
 # Use pre-trained model
-pre_trained: true
+pre_trained: True
 
 #============================ Quantization =====================================
 
@@ -76,24 +77,26 @@ quan:
     # Quantizer type (choices: lsq)
     mode: lsq
     # Bit width of quantized activation
-    bit: 4
+    bit: 6
     # Each output channel uses its own scaling factor
-    per_channel: false
+    per_channel: True
     # Whether to use symmetric quantization
     symmetric: false
     # Quantize all the numbers to non-negative
-    all_positive: true
+    all_positive: True
+
   weight: # (default for all layers)
     # Quantizer type (choices: lsq)
     mode: lsq
     # Bit width of quantized weight
-    bit: 4
+    bit: 6
     # Each output channel uses its own scaling factor
-    per_channel: false
+    per_channel: True
     # Whether to use symmetric quantization
     symmetric: true
     # Whether to quantize all the numbers to non-negative
     all_positive: false
+
   excepts:
     # Specify quantized bit width for some layers, like this:
     conv1:
@@ -102,24 +105,62 @@ quan:
         all_positive: false
       weight:
         bit: 8
+
     fc:
       act:
         bit: 8
-      weight:
+      weight:   
         bit: 8
 
+  progress:  # progressive quantization
+    mode: true
+    path: /home/lagoon/Project/LSQ/V8_best/resnet20_v8_4bit_progress_6bit_multi_step_20201207-174623/resnet20_v8_4bit_progress_6bit_multi_step_best.pth.tar
+    init_restart: false
+    act: # (default for all layers)
+      # Bit width of quantized activation
+      bit: 4
+      # Whether to use symmetric quantization
+      symmetric: false
+      # Quantize all the numbers to non-negative
+      all_positive: true
+
+    weight: # (default for all layers)
+      # Bit width of quantized weight
+      bit: 4
+      # Whether to use symmetric quantization
+      symmetric: true
+      # Whether to quantize all the numbers to non-negative
+      all_positive: false
+
+    excepts:
+      # dynamic bit width by layer
+      conv1:
+        act:
+          all_positive: false
+          bit: 8
+        weight:
+          bit: 8
+
+      linear:
+        act:
+          bit: 8
+
+        weight: 
+          bit: 8
+          
 #============================ Training / Evaluation ============================
 
 # Evaluate the model without training
 # If this field is true, all the bellowing options will be ignored
 eval: false
 
-epochs: 100
+epochs: 1
 
-optimizer:
+
+optimizer:  
   learning_rate: 0.01
   momentum: 0.9
-  weight_decay: 0.0001
+  weight_decay: 0.0001  
 
 # Learning rate scheduler
 lr_scheduler:
@@ -138,7 +179,7 @@ lr_scheduler:
 
   # Multi-step decay
   mode: multi_step
-  milestones: [30, 60, 90]
+  milestones: [200, 350, 500]
   gamma: 0.1
 
   # Exponential decay
@@ -148,11 +189,11 @@ lr_scheduler:
   # Cosine annealing
   # mode: cos
   # lr_min: 0
-  # cycle: 0.95
+  # cycle: 1
 
   # Cosine annealing with warm restarts
   # mode: cos_warm_restarts
-  # lr_min: 0
-  # cycle: 5
+  # lr_min: 0.0
+  # cycle: 20
   # cycle_scale: 2
-  # amp_scale: 0.5
+  # amp_scale: 1

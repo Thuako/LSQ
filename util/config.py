@@ -8,15 +8,28 @@ import munch
 import yaml
 
 
-def merge_nested_dict(d, other):
-    new = dict(d)
-    for k, v in other.items():
-        if d.get(k, None) is not None and type(v) is dict:
-            new[k] = merge_nested_dict(d[k], v)
-        else:
-            new[k] = v
-    return new
+# def merge_nested_dict(d, other):
+#     new = dict(d)
+#     for k, v in other.items():
+#         if d.get(k, None) is not None and type(v) is dict:
+#             new[k] = merge_nested_dict(d[k], v)
+#         else:
+#             new[k] = v
+#     return new
 
+# def get_config(default_file, args):
+    
+#     with open(default_file) as yaml_file:
+#         cfg = yaml.safe_load(yaml_file)
+
+#     for f in arg.config_file:
+#         if not os.path.isfile(f):
+#             raise FileNotFoundError('Cannot find a configuration file at', f)
+#         with open(f) as yaml_file:
+#             c = yaml.safe_load(yaml_file)
+#             cfg = merge_nested_dict(cfg, c)
+
+#     return munch.munchify(cfg)
 
 def get_config(default_file):
     p = argparse.ArgumentParser(description='Learned Step Size Quantization')
@@ -48,9 +61,9 @@ def init_logger(experiment_name, output_dir, cfg_file=None):
     log_file = log_dir / (exp_full_name + '.log')
 
     #logg with posixpath is not working so add by os    
-    logging.config.fileConfig(os.path.join(file_dir,'logging.conf'), disable_existing_loggers=False)
+    # logging.config.fileConfig(os.path.join(file_dir,'logging.conf'), disable_existing_loggers=False)
 
-
+    logging.config.fileConfig(cfg_file, defaults={'logfilename': str(log_file)})
     logger = logging.getLogger()
     logger.info('Log file for this run: ' + str(log_file))
     return log_dir
