@@ -61,3 +61,5 @@ v6_base_model/
 V8_best/
 nohup.*
 *.out
+
+Result/
